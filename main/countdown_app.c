@@ -279,14 +279,14 @@ void countdown_app_enter(void)
         int x = 11 + (i % 2) * 112;
         int y = 52 + (i / 2) * 47;
         s_card_wraps[i] = make_wrap(s_scr, x, y, 102, 40);
-        s_cards[i] = ui_pixel_panel_create(s_card_wraps[i], 0, 0, 102, 40);
+        s_cards[i] = ui_pixel_panel_create(s_card_wraps[i], 0, 0, 102, 40, UI_PAPER);
         s_card_labels[i] = ui_pixel_label(s_cards[i], COUNTDOWN_PRESET_LABELS[i],
                                           &lv_font_montserrat_14, UI_INK);
         lv_obj_center(s_card_labels[i]);
     }
 
     s_time_wrap = make_wrap(s_scr, 18, 56, 204, 110);
-    s_time_panel = ui_pixel_panel_create(s_time_wrap, 0, 0, 204, 110);
+    s_time_panel = ui_pixel_panel_create(s_time_wrap, 0, 0, 204, 110, UI_PAPER);
     s_time_label = ui_pixel_label(s_time_panel, "00:30",
                                   &lv_font_montserrat_20, UI_INK);
     lv_obj_align(s_time_label, LV_ALIGN_TOP_MID, 0, 16);
@@ -296,7 +296,7 @@ void countdown_app_enter(void)
     lv_obj_align(s_status, LV_ALIGN_BOTTOM_MID, 0, -8);
 
     s_bar_wrap = make_wrap(s_scr, 18, 174, 204, 28);
-    lv_obj_t *bar = ui_pixel_panel_create(s_bar_wrap, 0, 0, 204, 28);
+    lv_obj_t *bar = ui_pixel_panel_create(s_bar_wrap, 0, 0, 204, 28, UI_MUTED);
     s_bar_fill = lv_obj_create(bar);
     lv_obj_remove_flag(s_bar_fill, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(s_bar_fill, BAR_INNER_W, 10);
