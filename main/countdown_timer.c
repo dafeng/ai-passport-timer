@@ -4,16 +4,16 @@
 #include <stdio.h>
 
 const uint32_t COUNTDOWN_PRESET_MS[COUNTDOWN_PRESET_COUNT] = {
-    30u * 1000u,
     5u * 60u * 1000u,
     10u * 60u * 1000u,
     15u * 60u * 1000u,
     20u * 60u * 1000u,
+    25u * 60u * 1000u,
     30u * 60u * 1000u,
 };
 
 const char *const COUNTDOWN_PRESET_LABELS[COUNTDOWN_PRESET_COUNT] = {
-    "30s", "5m", "10m", "15m", "20m", "30m",
+    "5m", "10m", "15m", "20m", "25m", "30m",
 };
 
 static void apply_preset(countdown_t *t)

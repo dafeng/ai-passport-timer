@@ -21,9 +21,15 @@
 #define BEEP_MS           140
 #define BEEP_GAP_MS       90
 #define BEEP_COUNT        3
-#define BAR_INNER_W       176
+#define BAR_INNER_W       184
 #define TICK_MS           200
 #define BATTERY_PERIOD_MS 5000
+#define CARD_W            68
+#define CARD_H            68
+#define CARD_GAP_X        8
+#define CARD_GAP_Y        10
+#define CARD_ORIGIN_X     12
+#define CARD_ORIGIN_Y     50
 
 static const char *TAG = "countdown";
 
@@ -106,7 +112,12 @@ static void refresh_cards(void)
         if (!s_cards[i]) {
             continue;
         }
-        ui_pixel_set_selected(s_cards[i], i == s_timer.preset_index, true);
+        bool sel = (i == s_timer.preset_index);
+        ui_pixel_set_selected(s_cards[i], sel, true);
+        lv_obj_set_style_text_font(
+            s_card_labels[i],
+            sel ? &lv_font_montserrat_20 : &lv_font_montserrat_14,
+            0);
     }
 }
 
@@ -153,7 +164,7 @@ static void refresh_time_widgets(void)
         return;
     }
 
-    lv_obj_set_style_bg_color(s_time_panel, lv_color_hex(UI_PAPER), 0);
+    lv_obj_set_style_bg_color(s_time_panel, lv_color_hex(UI_YELLOW), 0);
     lv_obj_set_style_text_color(
         s_time_label, lv_color_hex(urgent ? UI_RED : UI_INK), 0);
     lv_label_set_text(s_status, "RUNNING");
@@ -172,7 +183,7 @@ static void refresh_ui(void)
     if (selecting) {
         refresh_cards();
         if (s_hint) {
-            lv_label_set_text(s_hint, "UP/DOWN  OK:START");
+            lv_label_set_text(s_hint, "UP/DOWN   OK START");
         }
     } else {
         refresh_time_widgets();
@@ -275,28 +286,33 @@ void countdown_app_enter(void)
     s_battery = ui_pixel_label(s_scr, "", &lv_font_montserrat_14, UI_PAPER);
     lv_obj_set_pos(s_battery, 192, 32);
 
+    /* 3x2 大方块：5m 10m 15m / 20m 25m 30m，选中项放大字号。 */
     for (int i = 0; i < COUNTDOWN_PRESET_COUNT; i++) {
-        int x = 11 + (i % 2) * 112;
-        int y = 52 + (i / 2) * 47;
-        s_card_wraps[i] = make_wrap(s_scr, x, y, 102, 40);
-        s_cards[i] = ui_pixel_panel_create(s_card_wraps[i], 0, 0, 102, 40, UI_PAPER);
+        int col = i % 3;
+        int row = i / 3;
+        int x = CARD_ORIGIN_X + col * (CARD_W + CARD_GAP_X);
+        int y = CARD_ORIGIN_Y + row * (CARD_H + CARD_GAP_Y);
+        s_card_wraps[i] = make_wrap(s_scr, x, y, CARD_W, CARD_H);
+        s_cards[i] = ui_pixel_panel_create(s_card_wraps[i], 0, 0, CARD_W, CARD_H,
+                                          UI_PAPER);
+        lv_obj_set_style_pad_all(s_cards[i], 0, 0);
         s_card_labels[i] = ui_pixel_label(s_cards[i], COUNTDOWN_PRESET_LABELS[i],
-                                          &lv_font_montserrat_14, UI_INK);
+                                          &lv_font_montserrat_20, UI_INK);
         lv_obj_center(s_card_labels[i]);
     }
 
-    s_time_wrap = make_wrap(s_scr, 18, 56, 204, 110);
-    s_time_panel = ui_pixel_panel_create(s_time_wrap, 0, 0, 204, 110, UI_PAPER);
-    s_time_label = ui_pixel_label(s_time_panel, "00:30",
+    s_time_wrap = make_wrap(s_scr, 16, 50, 208, 118);
+    s_time_panel = ui_pixel_panel_create(s_time_wrap, 0, 0, 208, 118, UI_YELLOW);
+    s_time_label = ui_pixel_label(s_time_panel, "05:00",
                                   &lv_font_montserrat_20, UI_INK);
-    lv_obj_align(s_time_label, LV_ALIGN_TOP_MID, 0, 16);
+    lv_obj_align(s_time_label, LV_ALIGN_TOP_MID, 0, 22);
 
     s_status = ui_pixel_label(s_time_panel, "RUNNING",
                               &lv_font_montserrat_14, UI_INK);
-    lv_obj_align(s_status, LV_ALIGN_BOTTOM_MID, 0, -8);
+    lv_obj_align(s_status, LV_ALIGN_BOTTOM_MID, 0, -12);
 
-    s_bar_wrap = make_wrap(s_scr, 18, 174, 204, 28);
-    lv_obj_t *bar = ui_pixel_panel_create(s_bar_wrap, 0, 0, 204, 28, UI_MUTED);
+    s_bar_wrap = make_wrap(s_scr, 16, 176, 208, 26);
+    lv_obj_t *bar = ui_pixel_panel_create(s_bar_wrap, 0, 0, 208, 26, UI_INK);
     s_bar_fill = lv_obj_create(bar);
     lv_obj_remove_flag(s_bar_fill, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_size(s_bar_fill, BAR_INNER_W, 10);
@@ -306,7 +322,7 @@ void countdown_app_enter(void)
     lv_obj_set_style_bg_color(s_bar_fill, lv_color_hex(UI_GRASS), 0);
     lv_obj_align(s_bar_fill, LV_ALIGN_LEFT_MID, 0, 0);
 
-    s_hint = ui_pixel_label(s_scr, "UP/DOWN  OK:START",
+    s_hint = ui_pixel_label(s_scr, "UP/DOWN   OK START",
                             &lv_font_montserrat_14, UI_PAPER);
     lv_obj_align(s_hint, LV_ALIGN_TOP_MID, 0, 208);
 

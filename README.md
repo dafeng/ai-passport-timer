@@ -6,7 +6,7 @@
 
 A countdown play for AI Passport. The device boots into preset selection. When time is up it beeps and flashes **TIME UP**.
 
-Presets: **30 seconds / 5 / 10 / 15 / 20 / 30 minutes**.
+Presets: **5 / 10 / 15 / 20 / 25 / 30 minutes**.
 
 ## Keys
 

@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-/* 预设档位数：30s / 5m / 10m / 15m / 20m / 30m。 */
+/* 预设档位数：5m / 10m / 15m / 20m / 25m / 30m。 */
 #define COUNTDOWN_PRESET_COUNT 6
 
 /* 各预设时长（毫秒）。与 COUNTDOWN_PRESET_LABELS 按下标对齐。 */
@@ -46,7 +46,7 @@ typedef struct {
     uint32_t anchor_ms;               /* 最近一次 start/resume 的单调时钟（ms） */
 } countdown_t;
 
-/* 初始化为 SELECT、第 0 档（30s）。t 不得为 NULL。 */
+/* 初始化为 SELECT、第 0 档（5m）。t 不得为 NULL。 */
 void countdown_init(countdown_t *t);
 
 /* 仅 SELECT 下循环切换预设；其它状态忽略。 */
