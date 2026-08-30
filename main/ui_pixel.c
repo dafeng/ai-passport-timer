@@ -31,15 +31,8 @@ lv_obj_t *ui_pixel_screen_create(const char *title)
     lv_obj_set_style_border_width(scr, 0, 0);
     lv_obj_set_style_pad_all(scr, 0, 0);
 
-    block(scr, 0, 0, 240, 36, UI_PANEL);
-    block(scr, 0, 36, 240, 2, UI_CYAN);
-    block(scr, 10, 14, 8, 8, UI_CYAN);
-
-    lv_obj_t *heading = ui_pixel_label(scr, title, &lv_font_montserrat_20, UI_PAPER);
-    lv_obj_set_pos(heading, 24, 6);
-
-    block(scr, 0, 286, 240, 2, UI_LINE);
-    block(scr, 0, 288, 240, 32, UI_PANEL);
+    lv_obj_t *heading = ui_pixel_label(scr, title, &lv_font_montserrat_14, UI_MUTED);
+    lv_obj_set_pos(heading, 12, 10);
     return scr;
 }
 
@@ -47,7 +40,7 @@ lv_obj_t *ui_pixel_panel_create(lv_obj_t *parent, int x, int y, int w, int h,
                                 uint32_t color)
 {
     lv_obj_t *panel = block(parent, x, y, w, h, color);
-    lv_obj_set_style_radius(panel, 6, 0);
+    lv_obj_set_style_radius(panel, 12, 0);
     lv_obj_set_style_border_color(panel, lv_color_hex(UI_LINE), 0);
     lv_obj_set_style_border_width(panel, 2, 0);
     lv_obj_set_style_pad_all(panel, 4, 0);
