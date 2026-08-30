@@ -8,6 +8,7 @@
 #include "bsp_i2c.h"
 #include "bsp_pins.h"
 #include "countdown_app.h"
+#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_sleep.h"
 
@@ -59,6 +60,7 @@ void app_main(void)
         bsp_lvgl_unlock();
     }
 
-    ESP_LOGI(TAG, "就绪: Button=%d Audio=%d Battery=%d",
-             button_ok, audio_ok, battery_ok);
+    ESP_LOGI(TAG, "就绪: Button=%d Audio=%d Battery=%d heap=%u",
+             button_ok, audio_ok, battery_ok,
+             (unsigned)heap_caps_get_free_size(MALLOC_CAP_8BIT));
 }
