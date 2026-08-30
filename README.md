@@ -40,3 +40,23 @@ idf.py --version
 ```
 
 Merged image: `build/FoloToy-AI-Passport-full.bin`.
+
+## GitHub Actions firmware
+
+Same flow as the upstream [CI build notes](https://github.com/FoloToy/ai-passport/blob/main/docs/development/CI-build-and-release.md): ordinary branch pushes do not publish a Release. A tag does.
+
+1. Enable Actions under **Settings → Actions** (off by default on a new fork).
+2. Push a tag such as `v0.1.0-timer`:
+
+```bash
+git tag v0.1.0-timer
+git push origin v0.1.0-timer
+```
+
+3. `Build firmware` runs `./tools/validate.sh --firmware` with ESP-IDF 5.5.3 / ESP32-C3.
+4. On success it creates a GitHub Release with `FoloToy-AI-Passport-full.bin`.
+5. **Run workflow** on `Build firmware` uploads an artifact only, with no Release.
+
+`Pull request checks` on `main` / PRs also builds firmware and keeps the artifact for 7 days.
+
+Flash with the [web flasher](https://ai-passport.folotoy.cn/tools/web-flasher/): pick the Release `FoloToy-AI-Passport-full.bin` and write from `0x0` to an 8 MB board.

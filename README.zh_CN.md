@@ -40,3 +40,23 @@ idf.py --version
 ```
 
 合并固件：`build/FoloToy-AI-Passport-full.bin`。
+
+## GitHub Actions 出包
+
+与上游 [CI 构建说明](https://github.com/FoloToy/ai-passport/blob/main/docs/development/CI-build-and-release.zh_CN.md) 相同：日常 push **不会**发 Release；打 tag 才会编译并挂上固件。
+
+1. 仓库 **Settings → Actions** 打开 Actions（fork 默认关闭）。
+2. 推送 tag，例如 `v0.1.0-timer`：
+
+```bash
+git tag v0.1.0-timer
+git push origin v0.1.0-timer
+```
+
+3. `Build firmware` 用 ESP-IDF 5.5.3 / ESP32-C3 跑 `./tools/validate.sh --firmware`。
+4. 成功后创建 GitHub Release，附件为 `FoloToy-AI-Passport-full.bin`。
+5. 也可在 Actions 页对 `Build firmware` 点 **Run workflow** 只出 artifact、不发 Release。
+
+`main` / PR 上的 `Pull request checks` 也会编固件，artifact 保留 7 天，不自动发 Release。
+
+刷机：打开 [在线刷机工具](https://ai-passport.folotoy.cn/tools/web-flasher/)，选 Release 里的 `FoloToy-AI-Passport-full.bin`，从 `0x0` 写入 8 MB 设备。
