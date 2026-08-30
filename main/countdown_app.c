@@ -42,6 +42,25 @@ static const int16_t RING_XY[RING_STEPS][2] = {
     {-80, -46}, {-70, -59}, {-59, -70}, {-46, -80}, {-31, -86}, {-16, -91},
 };
 
+static countdown_t s_timer;
+static lv_obj_t *s_scr;
+static lv_obj_t *s_glow;
+static lv_obj_t *s_orb;
+static lv_obj_t *s_ring;
+static lv_obj_t *s_ticks[COUNTDOWN_PRESET_COUNT];
+static lv_obj_t *s_pip;
+static lv_obj_t *s_clock;
+static lv_obj_t *s_sub;
+static lv_obj_t *s_hint;
+static lv_obj_t *s_battery;
+static lv_timer_t *s_tick;
+static TaskHandle_t s_audio_task;
+static volatile int s_beep_req;
+static bool s_audio_ok;
+static bool s_battery_ok;
+static uint32_t s_done_flash_ms;
+static uint32_t s_fx_ms;
+
 static lv_obj_t *px(lv_obj_t *parent, int x, int y, int w, int h, uint32_t color)
 {
     lv_obj_t *obj = lv_obj_create(parent);
@@ -107,25 +126,6 @@ static void layout_labels(void)
         lv_obj_align(s_hint, LV_ALIGN_BOTTOM_MID, 0, -12);
     }
 }
-
-static countdown_t s_timer;
-static lv_obj_t *s_scr;
-static lv_obj_t *s_glow;
-static lv_obj_t *s_orb;
-static lv_obj_t *s_ring;
-static lv_obj_t *s_ticks[COUNTDOWN_PRESET_COUNT];
-static lv_obj_t *s_pip;
-static lv_obj_t *s_clock;
-static lv_obj_t *s_sub;
-static lv_obj_t *s_hint;
-static lv_obj_t *s_battery;
-static lv_timer_t *s_tick;
-static TaskHandle_t s_audio_task;
-static volatile int s_beep_req;
-static bool s_audio_ok;
-static bool s_battery_ok;
-static uint32_t s_done_flash_ms;
-static uint32_t s_fx_ms;
 
 static uint32_t now_ms(void)
 {
