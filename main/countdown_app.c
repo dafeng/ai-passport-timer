@@ -24,10 +24,11 @@
 #define TICK_MS           80
 #define BATTERY_PERIOD_MS 5000
 #define CARD_W            68
-#define CARD_H            62
+#define CARD_H            70
 #define SEG_COUNT         8
-#define TILE_W            38
-#define TILE_H            52
+#define TILE_W            42
+#define TILE_H            72
+#define SEG_OFF           0x1A2838
 
 static const char *TAG = "countdown";
 
@@ -81,7 +82,6 @@ static lv_obj_t *s_status;
 static lv_obj_t *s_scan;
 static lv_obj_t *s_hint;
 static lv_obj_t *s_battery;
-static lv_obj_t *s_mascot;
 static lv_timer_t *s_tick;
 static TaskHandle_t s_audio_task;
 static volatile int s_beep_req;
@@ -93,18 +93,6 @@ static uint32_t s_fx_ms;
 static uint32_t now_ms(void)
 {
     return (uint32_t)(esp_timer_get_time() / 1000);
-}
-
-static void add_brackets(lv_obj_t *parent, int x, int y, int w, int h, uint32_t color)
-{
-    px(parent, x, y, 14, 3, color);
-    px(parent, x, y, 3, 14, color);
-    px(parent, x + w - 14, y, 14, 3, color);
-    px(parent, x + w - 3, y, 3, 14, color);
-    px(parent, x, y + h - 3, 14, 3, color);
-    px(parent, x, y + h - 14, 3, 14, color);
-    px(parent, x + w - 14, y + h - 3, 14, 3, color);
-    px(parent, x + w - 3, y + h - 14, 3, 14, color);
 }
 
 static void refresh_battery(void)
@@ -124,7 +112,7 @@ static void refresh_battery(void)
     lv_label_set_text_fmt(s_battery, "%d%%", soc);
     lv_obj_set_style_text_color(
         s_battery,
-        (soc < 20) ? lv_color_hex(UI_RED) : lv_color_hex(UI_PAPER),
+        (soc < 20) ? lv_color_hex(UI_RED) : lv_color_hex(UI_CYAN),
         0);
 }
 
@@ -139,6 +127,10 @@ static void refresh_cards(void)
         lv_obj_set_style_text_font(
             s_card_labels[i],
             sel ? &lv_font_montserrat_20 : &lv_font_montserrat_14,
+            0);
+        lv_obj_set_style_text_color(
+            s_card_labels[i],
+            lv_color_hex(sel ? UI_CYAN : UI_PAPER),
             0);
     }
     if (s_preview) {
@@ -174,7 +166,7 @@ static void refresh_meter(uint32_t permille, uint32_t on_color)
         }
         lv_obj_set_style_bg_color(
             s_segs[i],
-            lv_color_hex((unsigned)i < lit ? on_color : 0x3A4A58),
+            lv_color_hex((unsigned)i < lit ? on_color : SEG_OFF),
             0);
     }
 }
@@ -195,33 +187,33 @@ static void refresh_time_widgets(void)
                   s_timer.remaining_ms <= 10000;
     bool blink = ((s_fx_ms / 400u) & 1u) == 0;
 
-    uint32_t digit = UI_INK;
-    uint32_t tile = 0xB9F3FF;
-    uint32_t meter = UI_GRASS;
-    uint32_t led = UI_GRASS;
+    uint32_t digit = UI_CYAN;
+    uint32_t tile = UI_PANEL;
+    uint32_t meter = UI_CYAN;
+    uint32_t led = UI_CYAN;
 
     if (s_timer.state == COUNTDOWN_STATE_DONE) {
-        digit = UI_INK;
-        tile = blink ? UI_YELLOW : UI_RED;
+        digit = blink ? UI_BG : UI_PAPER;
+        tile = blink ? UI_RED : UI_YELLOW;
         meter = UI_RED;
         led = blink ? UI_RED : UI_YELLOW;
         lv_label_set_text(s_status, "LOCK  TIME-UP");
         lv_label_set_text(s_hint, "SIGNAL  OK AGAIN");
     } else if (s_timer.state == COUNTDOWN_STATE_PAUSED) {
-        tile = UI_ORANGE;
+        digit = UI_ORANGE;
         meter = urgent ? UI_RED : UI_ORANGE;
-        led = blink ? UI_ORANGE : 0x3A4A58;
+        led = blink ? UI_ORANGE : SEG_OFF;
         lv_label_set_text(s_status, "HOLD  STANDBY");
         lv_label_set_text(s_hint, "OK RESUME   HOLD BACK");
     } else {
         if (urgent) {
             digit = UI_RED;
-            tile = UI_YELLOW;
+            tile = UI_PANEL_HI;
             meter = UI_RED;
-            led = blink ? UI_RED : 0x3A4A58;
+            led = blink ? UI_RED : SEG_OFF;
             lv_label_set_text(s_status, "WARN  FINAL-10");
         } else {
-            led = blink ? UI_GRASS : 0x3A4A58;
+            led = blink ? UI_CYAN : SEG_OFF;
             lv_label_set_text(s_status, "LIVE  COUNTDOWN");
         }
         lv_label_set_text(s_hint, "OK PAUSE    HOLD BACK");
@@ -262,24 +254,23 @@ static void clear_layer(void)
 static void build_select(void)
 {
     clear_layer();
-    s_layer = make_layer(s_scr, 46, 162);
-    add_brackets(s_layer, 6, 2, 228, 156, UI_PAPER);
+    s_layer = make_layer(s_scr, 42, 236);
 
     s_preview = ui_pixel_label(s_layer, "T-MINUS  05:00",
-                               &lv_font_montserrat_14, UI_YELLOW);
-    lv_obj_align(s_preview, LV_ALIGN_TOP_MID, 0, 8);
+                               &lv_font_montserrat_14, UI_CYAN);
+    lv_obj_align(s_preview, LV_ALIGN_TOP_MID, 0, 12);
 
-    px(s_layer, 28, 28, 184, 2, UI_INK);
+    px(s_layer, 28, 36, 184, 2, UI_LINE);
 
     for (int i = 0; i < COUNTDOWN_PRESET_COUNT; i++) {
         int col = i % 3;
         int row = i / 3;
-        int x = 12 + col * (CARD_W + 8);
-        int y = 36 + row * (CARD_H + 8);
-        s_cards[i] = ui_pixel_panel_create(s_layer, x, y, CARD_W, CARD_H, UI_PAPER);
+        int x = 14 + col * (CARD_W + 8);
+        int y = 52 + row * (CARD_H + 14);
+        s_cards[i] = ui_pixel_panel_create(s_layer, x, y, CARD_W, CARD_H, UI_PANEL);
         lv_obj_set_style_pad_all(s_cards[i], 0, 0);
         s_card_labels[i] = ui_pixel_label(s_cards[i], COUNTDOWN_PRESET_LABELS[i],
-                                          &lv_font_montserrat_20, UI_INK);
+                                          &lv_font_montserrat_20, UI_PAPER);
         lv_obj_center(s_card_labels[i]);
     }
 
@@ -293,35 +284,36 @@ static void build_select(void)
 static void build_run(void)
 {
     clear_layer();
-    s_layer = make_layer(s_scr, 46, 162);
-    add_brackets(s_layer, 8, 4, 224, 152, UI_YELLOW);
+    s_layer = make_layer(s_scr, 42, 236);
 
-    s_led = px(s_layer, 18, 12, 10, 10, UI_GRASS);
+    s_led = px(s_layer, 16, 16, 10, 10, UI_CYAN);
+    lv_obj_set_style_radius(s_led, LV_RADIUS_CIRCLE, 0);
     s_status = ui_pixel_label(s_layer, "LIVE  COUNTDOWN",
-                              &lv_font_montserrat_14, UI_PAPER);
-    lv_obj_set_pos(s_status, 34, 10);
+                              &lv_font_montserrat_14, UI_MUTED);
+    lv_obj_set_pos(s_status, 34, 14);
 
-    const int clock_x = 18;
-    const int clock_y = 30;
+    const int clock_x = 16;
+    const int clock_y = 44;
     const int gap = 6;
     for (int i = 0; i < 4; i++) {
         int x = clock_x + i * (TILE_W + gap);
         if (i >= 2) {
-            x += 10;
+            x += 12;
         }
         s_tiles[i] = ui_pixel_panel_create(s_layer, x, clock_y, TILE_W, TILE_H,
-                                           0xB9F3FF);
+                                           UI_PANEL);
         lv_obj_set_style_pad_all(s_tiles[i], 0, 0);
         s_tile_labels[i] = ui_pixel_label(s_tiles[i], "0",
-                                          &lv_font_montserrat_20, UI_INK);
+                                          &lv_font_montserrat_20, UI_CYAN);
         lv_obj_center(s_tile_labels[i]);
     }
-    int colon_x = clock_x + 2 * (TILE_W + gap) + 1;
-    s_colon_top = px(s_layer, colon_x, 44, 6, 6, UI_YELLOW);
-    s_colon_bot = px(s_layer, colon_x, 64, 6, 6, UI_YELLOW);
+    int colon_x = clock_x + 2 * (TILE_W + gap) + 2;
+    s_colon_top = px(s_layer, colon_x, 64, 6, 6, UI_CYAN);
+    s_colon_bot = px(s_layer, colon_x, 90, 6, 6, UI_CYAN);
 
     for (int i = 0; i < SEG_COUNT; i++) {
-        s_segs[i] = px(s_layer, 18 + i * 26, 96, 22, 12, UI_GRASS);
+        s_segs[i] = px(s_layer, 16 + i * 27, 136, 23, 10, UI_CYAN);
+        lv_obj_set_style_radius(s_segs[i], 2, 0);
     }
 
     s_mode = UI_MODE_RUN;
@@ -413,11 +405,10 @@ static void on_tick(lv_timer_t *timer)
     if (just_done) {
         s_done_flash_ms = 0;
         s_beep_req = 1;
-        ui_pixel_mascot_jump(s_mascot);
     }
 
     if (s_scan) {
-        int y = 48 + (int)((s_fx_ms / 16u) % 150u);
+        int y = 42 + (int)((s_fx_ms / 16u) % 236u);
         lv_obj_set_y(s_scan, y);
         lv_obj_move_foreground(s_scan);
     }
@@ -442,17 +433,15 @@ void countdown_app_enter(void)
     s_scr = ui_pixel_screen_create("CHRONO");
     lv_screen_load(s_scr);
 
-    s_scan = px(s_scr, 0, 48, 240, 2, 0xFFFFFF);
-    lv_obj_set_style_bg_opa(s_scan, LV_OPA_40, 0);
+    s_scan = px(s_scr, 0, 42, 240, 2, UI_CYAN);
+    lv_obj_set_style_bg_opa(s_scan, LV_OPA_20, 0);
 
-    s_battery = ui_pixel_label(s_scr, "", &lv_font_montserrat_14, UI_PAPER);
-    lv_obj_set_pos(s_battery, 192, 32);
+    s_battery = ui_pixel_label(s_scr, "", &lv_font_montserrat_14, UI_CYAN);
+    lv_obj_set_pos(s_battery, 188, 8);
 
     s_hint = ui_pixel_label(s_scr, "UP/DOWN   OK ARM",
-                            &lv_font_montserrat_14, UI_PAPER);
-    lv_obj_align(s_hint, LV_ALIGN_TOP_MID, 0, 210);
-
-    s_mascot = ui_pixel_mascot_create(s_scr, 101, 236);
+                            &lv_font_montserrat_14, UI_MUTED);
+    lv_obj_align(s_hint, LV_ALIGN_BOTTOM_MID, 0, -8);
 
     refresh_battery();
     build_select();
@@ -485,7 +474,7 @@ void countdown_app_exit(void)
         memset(s_tile_labels, 0, sizeof(s_tile_labels));
         memset(s_segs, 0, sizeof(s_segs));
         s_preview = s_colon_top = s_colon_bot = s_led = s_status = NULL;
-        s_scan = s_hint = s_battery = s_mascot = NULL;
+        s_scan = s_hint = s_battery = NULL;
         s_mode = UI_MODE_NONE;
     }
 }
@@ -498,7 +487,6 @@ void countdown_app_key(bsp_btn_t btn, bsp_btn_ev_t ev)
         if (s_timer.state != COUNTDOWN_STATE_SELECT) {
             countdown_reset(&s_timer);
             sync_mode();
-            ui_pixel_mascot_jump(s_mascot);
         }
         return;
     }
@@ -511,15 +499,12 @@ void countdown_app_key(bsp_btn_t btn, bsp_btn_ev_t ev)
         if (btn == BSP_BTN_UP) {
             countdown_select_prev(&s_timer);
             refresh_cards();
-            ui_pixel_mascot_jump(s_mascot);
         } else if (btn == BSP_BTN_DOWN) {
             countdown_select_next(&s_timer);
             refresh_cards();
-            ui_pixel_mascot_jump(s_mascot);
         } else if (btn == BSP_BTN_OK) {
             countdown_start(&s_timer, t);
             sync_mode();
-            ui_pixel_mascot_jump(s_mascot);
         }
         return;
     }
@@ -528,7 +513,6 @@ void countdown_app_key(bsp_btn_t btn, bsp_btn_ev_t ev)
         if (btn == BSP_BTN_OK) {
             countdown_reset(&s_timer);
             sync_mode();
-            ui_pixel_mascot_jump(s_mascot);
         }
         return;
     }
@@ -542,7 +526,6 @@ void countdown_app_key(bsp_btn_t btn, bsp_btn_ev_t ev)
         countdown_resume(&s_timer, t);
     }
     refresh_time_widgets();
-    ui_pixel_mascot_jump(s_mascot);
 }
 
 void countdown_app_set_peripherals(bool audio_ok, bool battery_ok)
